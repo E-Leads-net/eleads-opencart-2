@@ -85,6 +85,9 @@
         <div class="panel-heading">
           <ul class="nav nav-tabs">
             <li class="active"><a href="#tab-export" data-toggle="tab"><?php echo $tab_export; ?></a></li>
+            <?php if (!empty($seo_tab_available)) { ?>
+            <li><a href="#tab-seo" data-toggle="tab"><?php echo $tab_seo; ?></a></li>
+            <?php } ?>
             <li><a href="#tab-api" data-toggle="tab"><?php echo $tab_api; ?></a></li>
             <li><a href="#tab-update" data-toggle="tab"><?php echo $tab_update; ?></a></li>
           </ul>
@@ -321,6 +324,35 @@
               </div>
             </div>
             </div>
+
+            <?php if (!empty($seo_tab_available)) { ?>
+            <div class="tab-pane" id="tab-seo">
+              <div class="row">
+                <div class="col-sm-12">
+                  <div class="panel panel-default eleads-card eleads-section">
+                    <div class="panel-heading"><strong><?php echo $tab_seo; ?></strong></div>
+                    <div class="panel-body">
+                      <?php if (!$seo_url_enabled) { ?>
+                        <div class="alert alert-warning"><?php echo $text_seo_url_disabled; ?></div>
+                      <?php } ?>
+                      <div class="form-group">
+                        <label class="col-sm-2 control-label"><?php echo $entry_seo_pages; ?></label>
+                        <div class="col-sm-10">
+                          <select name="module_eleads_seo_pages_enabled" class="form-control" <?php echo !$seo_url_enabled ? 'disabled' : ''; ?>>
+                            <option value="1" <?php echo $module_eleads_seo_pages_enabled ? 'selected' : ''; ?>><?php echo $text_enabled; ?></option>
+                            <option value="0" <?php echo !$module_eleads_seo_pages_enabled ? 'selected' : ''; ?>><?php echo $text_disabled; ?></option>
+                          </select>
+                          <?php if (!$seo_url_enabled) { ?>
+                            <input type="hidden" name="module_eleads_seo_pages_enabled" value="0"/>
+                          <?php } ?>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <?php } ?>
 
             <div class="tab-pane" id="tab-api">
               <div class="row">
