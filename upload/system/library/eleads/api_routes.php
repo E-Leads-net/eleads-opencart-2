@@ -6,9 +6,9 @@ class EleadsApiRoutes {
 	const SEO_SLUGS = 'https://stage-dashboard.e-leads.net/api/seo/slugs';
 	const SEO_PAGE = 'https://stage-dashboard.e-leads.net/api/seo/pages/';
 
-	const GITHUB_REPO = 'https://github.com/E-Leads-net/eleads-opencart';
-	const GITHUB_LATEST_RELEASE = 'https://api.github.com/repos/E-Leads-net/eleads-opencart/releases/latest';
-	const GITHUB_TAGS = 'https://api.github.com/repos/E-Leads-net/eleads-opencart/tags';
+	const GITHUB_REPO = 'https://github.com/E-Leads-net/eleads-opencart-2';
+	const GITHUB_LATEST_RELEASE = 'https://api.github.com/repos/E-Leads-net/eleads-opencart-2/releases/latest';
+	const GITHUB_TAGS = 'https://api.github.com/repos/E-Leads-net/eleads-opencart-2/tags';
 
 	public static function ecommerceItemsUpdateUrl($external_id) {
 		return rtrim(self::API_BASE, '/') . '/ecommerce/items/' . rawurlencode((string)$external_id);
