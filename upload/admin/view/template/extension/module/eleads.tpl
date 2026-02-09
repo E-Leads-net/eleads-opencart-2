@@ -347,6 +347,17 @@
                           <?php } ?>
                         </div>
                       </div>
+                      <div class="form-group">
+                        <label class="col-sm-2 control-label"><?php echo $entry_sitemap_url; ?></label>
+                        <div class="col-sm-10">
+                          <div class="input-group">
+                            <input type="text" class="form-control" readonly value="<?php echo $sitemap_url_full; ?>" id="eleads-sitemap-url" />
+                            <span class="input-group-btn">
+                              <button type="button" class="btn btn-default" onclick="eleadsCopySitemap('eleads-sitemap-url')">Copy</button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -398,6 +409,20 @@
   </div>
 </div>
 <?php echo $footer; ?>
+<script type="text/javascript"><!--
+function eleadsCopySitemap(id) {
+  var input = document.getElementById(id);
+  if (!input) return;
+  var text = input.value || '';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text);
+    return;
+  }
+  input.value = text;
+  input.select();
+  try { document.execCommand('copy'); } catch (e) {}
+}
+//--></script>
 <script>
   (function() {
     window.eleadsSelectAllCategories = function(checked) {
