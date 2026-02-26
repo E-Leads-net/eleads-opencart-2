@@ -30,6 +30,9 @@ class ControllerExtensionModuleEleads extends Controller {
 			if ($api_key_submitted !== '' && !empty($status['ok'])) {
 				$settings_current = $this->model_setting_setting->getSetting('module_eleads');
 				$settings_current['module_eleads_api_key'] = $api_key_submitted;
+				if (isset($status['project_id'])) {
+					$settings_current['module_eleads_project_id'] = (int)$status['project_id'];
+				}
 				$this->model_setting_setting->editSetting('module_eleads', $settings_current);
 				$api_key = $api_key_submitted;
 				$api_key_valid = true;
