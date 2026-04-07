@@ -106,17 +106,21 @@
                             <tr>
                               <th>Feed Name</th>
                               <th>Feed URL</th>
-                              <th style="width: 180px;">Actions</th>
+                              <th style="width: 240px;">Actions</th>
                             </tr>
                           </thead>
                           <tbody>
                             <?php foreach ($feed_urls as $feed) { ?>
                               <tr>
                                 <td><?php echo $feed['name']; ?></td>
-                                <td><a href="<?php echo $feed['url']; ?>" target="_blank"><?php echo $feed['url']; ?></a></td>
+                                <td>
+                                  <a href="<?php echo $feed['url']; ?>" target="_blank"><?php echo $feed['url']; ?></a>
+                                  <span class="eleads-feed-status" id="eleads-feed-status-<?php echo $feed['code']; ?>"><?php echo $text_feed_idle; ?></span>
+                                </td>
                                 <td>
                                   <button type="button" class="btn btn-default btn-xs eleads-copy-btn" data-url="<?php echo $feed['url']; ?>">Copy</button>
                                   <a class="btn btn-default btn-xs" href="<?php echo $feed['url']; ?>" download="eleads-<?php echo $feed['code']; ?>.xml">Save</a>
+                                  <button type="button" class="btn btn-primary btn-xs eleads-generate-btn" data-lang="<?php echo $feed['code']; ?>" data-generate-url="<?php echo $feed['generate_url']; ?>" data-status-url="<?php echo $feed['status_url']; ?>"><?php echo $button_generate; ?></button>
                                 </td>
                               </tr>
                             <?php } ?>
@@ -425,6 +429,15 @@ function eleadsCopySitemap(id) {
 //--></script>
 <script>
   (function() {
+    var eleadsApiKey = <?php echo json_encode($eleads_api_key_js); ?>;
+    var feedTexts = {
+      idle: <?php echo json_encode($text_feed_idle); ?>,
+      running: <?php echo json_encode($text_feed_running); ?>,
+      ready: <?php echo json_encode($text_feed_ready); ?>,
+      failed: <?php echo json_encode($text_feed_failed); ?>,
+      accepted: <?php echo json_encode($text_feed_accepted); ?>
+    };
+
     window.eleadsSelectAllCategories = function(checked) {
       var tree = document.getElementById('eleads-categories-tree');
       if (!tree) return;
@@ -460,6 +473,88 @@ function eleadsCopySitemap(id) {
       btn.addEventListener('click', function() {
         var url = btn.getAttribute('data-url') || '';
         copyText(url);
+      });
+    });
+
+    function setFeedStatus(lang, status, error) {
+      var badge = document.getElementById('eleads-feed-status-' + lang);
+      if (!badge) return;
+
+      if (status === 'running' || status === 'accepted') {
+        badge.textContent = status === 'accepted' ? feedTexts.accepted : feedTexts.running;
+        return;
+      }
+      if (status === 'ready') {
+        badge.textContent = feedTexts.ready;
+        return;
+      }
+      if (status === 'failed') {
+        badge.textContent = error ? (feedTexts.failed + ': ' + error) : feedTexts.failed;
+        return;
+      }
+
+      badge.textContent = feedTexts.idle;
+    }
+
+    function pollFeedStatus(lang, statusUrl) {
+      var maxAttempts = 120;
+      var attempts = 0;
+
+      function tick() {
+        attempts += 1;
+        fetch(statusUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + eleadsApiKey
+          },
+          credentials: 'same-origin'
+        }).then(function(response) {
+          return response.json();
+        }).then(function(data) {
+          var status = data.status || 'idle';
+          setFeedStatus(lang, status, data.error || '');
+          if (status === 'running' && attempts < maxAttempts) {
+            window.setTimeout(tick, 1500);
+          }
+        }).catch(function() {
+          setFeedStatus(lang, 'failed', 'network_error');
+        });
+      }
+
+      tick();
+    }
+
+    var generateButtons = document.querySelectorAll('.eleads-generate-btn');
+    Array.prototype.forEach.call(generateButtons, function(btn) {
+      btn.addEventListener('click', function() {
+        var lang = btn.getAttribute('data-lang') || '';
+        var generateUrl = btn.getAttribute('data-generate-url') || '';
+        var statusUrl = btn.getAttribute('data-status-url') || '';
+        if (!generateUrl || !statusUrl || !eleadsApiKey) {
+          setFeedStatus(lang, 'failed', 'api_key_missing');
+          return;
+        }
+
+        setFeedStatus(lang, 'accepted');
+        fetch(generateUrl, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + eleadsApiKey
+          },
+          credentials: 'same-origin'
+        }).then(function(response) {
+          return response.json();
+        }).then(function(data) {
+          if (data.error) {
+            setFeedStatus(lang, 'failed', data.error);
+            return;
+          }
+          pollFeedStatus(lang, statusUrl);
+        }).catch(function() {
+          setFeedStatus(lang, 'failed', 'network_error');
+        });
       });
     });
 
