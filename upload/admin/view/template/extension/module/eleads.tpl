@@ -497,11 +497,7 @@ function eleadsCopySitemap(id) {
     }
 
     function pollFeedStatus(lang, statusUrl) {
-      var maxAttempts = 120;
-      var attempts = 0;
-
       function tick() {
-        attempts += 1;
         fetch(statusUrl, {
           method: 'GET',
           headers: {
@@ -514,8 +510,8 @@ function eleadsCopySitemap(id) {
         }).then(function(data) {
           var status = data.status || 'idle';
           setFeedStatus(lang, status, data.error || '');
-          if (status === 'running' && attempts < maxAttempts) {
-            window.setTimeout(tick, 1500);
+          if (status === 'running') {
+            window.setTimeout(tick, 1000);
           }
         }).catch(function() {
           setFeedStatus(lang, 'failed', 'network_error');
