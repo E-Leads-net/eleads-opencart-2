@@ -2,7 +2,7 @@
 <modification>
   <name>E-Leads OpenCart 2</name>
   <code>eleads_oc2</code>
-  <version>0.1.35</version>
+  <version>0.1.36</version>
   <author>E-Leads</author>
 
   <file path="catalog/controller/startup/seo_url.php">
@@ -134,7 +134,7 @@
   </file>
 
   <file path="admin/model/catalog/product.php">
-    <operation>
+    <operation error="skip">
       <search><![CDATA[return $product_id;]]></search>
       <add position="before"><![CDATA[
 		// E-Leads sync: product created
@@ -151,8 +151,13 @@
 ]]></add>
     </operation>
 
-    <operation>
-      <search index="2"><![CDATA[$this->cache->delete('product');]]></search>
+    <operation error="skip">
+      <search><![CDATA[
+		$this->cache->delete('product');
+	}
+
+	public function copyProduct($product_id) {
+]]></search>
       <add position="before"><![CDATA[
 		// E-Leads sync: product updated
 		if ($this->config->get('module_eleads_sync_enabled')) {
@@ -168,18 +173,13 @@
 ]]></add>
     </operation>
 
-    <operation>
-      <search><![CDATA[public function deleteProduct($product_id) {]]></search>
-      <add position="after"><![CDATA[
-		$__eleads_deleted_product_id = (int)$product_id;
-]]></add>
-    </operation>
-
-    <operation>
-      <search index="3"><![CDATA[$this->cache->delete('product');]]></search>
+    <operation error="skip">
+      <search><![CDATA[
+		$this->db->query("DELETE FROM " . DB_PREFIX . "coupon_product WHERE product_id = '" . (int)$product_id . "'");
+]]></search>
       <add position="after"><![CDATA[
 		// E-Leads sync: product deleted
-		if (isset($__eleads_deleted_product_id) && $this->config->get('module_eleads_sync_enabled')) {
+		if ($this->config->get('module_eleads_sync_enabled')) {
 			require_once DIR_SYSTEM . 'library/eleads/bootstrap.php';
 			require_once DIR_SYSTEM . 'library/eleads/oc_adapter.php';
 			$adapter = new EleadsOcAdapter($this->registry);
@@ -187,7 +187,7 @@
 			$service = new EleadsSyncService($settings, $adapter, new EleadsSyncPayloadBuilder(), new EleadsApiClient());
 			$lang_code = (string)$this->config->get('config_admin_language');
 			$lang_code = $lang_code === 'ua' ? 'uk' : $lang_code;
-			$service->syncProductDeleted($__eleads_deleted_product_id, $lang_code);
+			$service->syncProductDeleted((int)$product_id, $lang_code);
 		}
 ]]></add>
     </operation>
