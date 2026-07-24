@@ -67,6 +67,7 @@ class ControllerExtensionModuleEleads extends Controller {
 			if ($api_key === '') {
 				$this->session->data['error'] = $this->language->get('text_api_key_required');
 			} elseif ($this->validate()) {
+				$this->normalizeSerializedSelections();
 				$settings_current = $this->model_setting_setting->getSetting('module_eleads');
 				$seo_prev = !empty($settings_current['module_eleads_seo_pages_enabled']);
 				$settings_new = array_merge($settings_current, $this->request->post);
@@ -342,6 +343,34 @@ class ControllerExtensionModuleEleads extends Controller {
 		return $lang;
 	}
 
+	private function normalizeSerializedSelections() {
+		$fields = array(
+			'module_eleads_categories_serialized' => 'module_eleads_categories',
+			'module_eleads_filter_attributes_serialized' => 'module_eleads_filter_attributes',
+			'module_eleads_filter_option_values_serialized' => 'module_eleads_filter_option_values',
+		);
+
+		foreach ($fields as $serialized_key => $setting_key) {
+			if (!isset($this->request->post[$serialized_key])) {
+				continue;
+			}
+
+			$ids = array();
+			$raw = trim((string)$this->request->post[$serialized_key]);
+			if ($raw !== '') {
+				foreach (explode(',', $raw) as $value) {
+					$id = (int)$value;
+					if ($id > 0) {
+						$ids[$id] = $id;
+					}
+				}
+			}
+
+			$this->request->post[$setting_key] = array_values($ids);
+			unset($this->request->post[$serialized_key]);
+		}
+	}
+
 	private function validate() {
 		if (!$this->user->hasPermission('modify', 'extension/module/eleads')) {
 			$this->error['warning'] = $this->language->get('error_permission');
@@ -440,7 +469,7 @@ class ControllerExtensionModuleEleads extends Controller {
 			} else {
 				$html .= '<span class="eleads-tree-spacer"></span>';
 			}
-			$html .= '<label class="eleads-tree-label"><input type="checkbox" name="module_eleads_categories[]" value="' . $id . '"' . $checked . '><span class="eleads-tree-box"></span><span class="eleads-tree-text">' . $name . '</span></label>';
+			$html .= '<label class="eleads-tree-label"><input type="checkbox" class="eleads-category-checkbox" value="' . $id . '"' . $checked . '><span class="eleads-tree-box"></span><span class="eleads-tree-text">' . $name . '</span></label>';
 			if ($has_children) {
 				$html .= '<div class="eleads-tree-children">' . $this->renderCategoriesTreeHtml($node['children'], $selected_set) . '</div>';
 			}

@@ -171,6 +171,7 @@
               <div class="eleads-tree" id="eleads-categories-tree">
                 <?php echo $categories_tree_html; ?>
               </div>
+              <input type="hidden" name="module_eleads_categories_serialized" id="eleads-categories-serialized" value="<?php echo implode(',', array_map('intval', (array)$module_eleads_categories)); ?>">
             </div>
           </div>
 
@@ -197,7 +198,7 @@
                     <li class="eleads-tree-item">
                       <span class="eleads-tree-spacer"></span>
                       <label class="eleads-tree-label">
-                        <input type="checkbox" name="module_eleads_filter_attributes[]" value="<?php echo $attribute['attribute_id']; ?>" <?php echo in_array($attribute['attribute_id'], $module_eleads_filter_attributes) ? 'checked' : ''; ?>>
+                        <input type="checkbox" class="eleads-filter-attribute-checkbox" value="<?php echo $attribute['attribute_id']; ?>" <?php echo in_array($attribute['attribute_id'], $module_eleads_filter_attributes) ? 'checked' : ''; ?>>
                         <span class="eleads-tree-box"></span>
                         <span class="eleads-tree-text"><?php echo $attribute['name']; ?></span>
                       </label>
@@ -205,6 +206,7 @@
                   <?php } ?>
                 </ul>
               </div>
+              <input type="hidden" name="module_eleads_filter_attributes_serialized" id="eleads-filter-attributes-serialized" value="<?php echo implode(',', array_map('intval', (array)$module_eleads_filter_attributes)); ?>">
             </div>
           </div>
 
@@ -233,7 +235,7 @@
                         <li class="eleads-tree-item">
                           <span class="eleads-tree-spacer"></span>
                           <label class="eleads-tree-label">
-                            <input type="checkbox" name="module_eleads_filter_option_values[]" value="<?php echo $value['option_value_id']; ?>" <?php echo in_array($value['option_value_id'], $module_eleads_filter_option_values) ? 'checked' : ''; ?>>
+                            <input type="checkbox" class="eleads-filter-option-checkbox" value="<?php echo $value['option_value_id']; ?>" <?php echo in_array($value['option_value_id'], $module_eleads_filter_option_values) ? 'checked' : ''; ?>>
                             <span class="eleads-tree-box"></span>
                             <span class="eleads-tree-text"><?php echo $option['name']; ?>: <?php echo $value['name']; ?></span>
                           </label>
@@ -243,6 +245,7 @@
                   <?php } ?>
                 </ul>
               </div>
+              <input type="hidden" name="module_eleads_filter_option_values_serialized" id="eleads-filter-options-serialized" value="<?php echo implode(',', array_map('intval', (array)$module_eleads_filter_option_values)); ?>">
             </div>
           </div>
           <div class="form-group">
@@ -543,7 +546,7 @@ function eleadsCopySitemap(id) {
     });
 
     function getAllCheckboxes() {
-      return tree.querySelectorAll('input[type="checkbox"][name="module_eleads_categories[]"]');
+      return tree.querySelectorAll('.eleads-category-checkbox');
     }
 
     function closestByClass(node, className) {
@@ -656,7 +659,7 @@ function eleadsCopySitemap(id) {
       }
       if (!childrenWrap) return;
 
-      var children = childrenWrap.querySelectorAll('input[type="checkbox"][name="module_eleads_categories[]"]');
+      var children = childrenWrap.querySelectorAll('.eleads-category-checkbox');
       Array.prototype.forEach.call(children, function(cb) {
         cb.checked = checked;
         cb.indeterminate = false;
@@ -684,7 +687,7 @@ function eleadsCopySitemap(id) {
 
     tree.addEventListener('change', function(e) {
       var input = closestInput(e.target);
-      if (!input || input.type !== 'checkbox' || input.name !== 'module_eleads_categories[]') return;
+      if (!input || input.type !== 'checkbox' || !input.classList.contains('eleads-category-checkbox')) return;
       var li = closestByClass(input, 'eleads-tree-item');
       if (!li) return;
       input.indeterminate = false;
@@ -728,6 +731,26 @@ function eleadsCopySitemap(id) {
     }
     if (attrToggle) attrToggle.addEventListener('change', refresh);
     if (optToggle) optToggle.addEventListener('change', refresh);
+
+    function syncSerializedSelection(selector, hiddenId) {
+      var hidden = document.getElementById(hiddenId);
+      if (!hidden) return;
+      var values = [];
+      var inputs = document.querySelectorAll(selector);
+      Array.prototype.forEach.call(inputs, function(input) {
+        if (input.checked) values.push(input.value);
+      });
+      hidden.value = values.join(',');
+    }
+
+    function syncSerializedSelections() {
+      syncSerializedSelection('.eleads-category-checkbox', 'eleads-categories-serialized');
+      syncSerializedSelection('.eleads-filter-attribute-checkbox', 'eleads-filter-attributes-serialized');
+      syncSerializedSelection('.eleads-filter-option-checkbox', 'eleads-filter-options-serialized');
+    }
+
+    var settingsForm = document.getElementById('form-eleads');
+    if (settingsForm) settingsForm.addEventListener('submit', syncSerializedSelections);
     initTreeState();
     refresh();
 
